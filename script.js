@@ -11,6 +11,11 @@ const map = new maplibregl.Map({
     fadeDuration: 0
 });
 
+map.addControl(new maplibregl.GeolocateControl({
+    positionOptions: { enableHighAccuracy: true },
+    trackUserLocation: true
+}), 'bottom-right');
+
 map.on('load', () => {
     // Hide Carto basemap text labels so they don't conflict with our names
     map.getStyle().layers.forEach(layer => {
@@ -85,25 +90,75 @@ map.on('load', () => {
         });
     });
 
+    const wikiPanel = document.getElementById('wikiPanel');
+    const wikiPanelContent = document.getElementById('wikiPanelContent');
+    const closeWikiPanel = document.getElementById('closeWikiPanel');
+
+    closeWikiPanel.addEventListener('click', () => {
+        wikiPanel.classList.remove('open');
+    });
+
     layers.forEach(lyr => {
-        map.on('click', lyr, (e) => {
+        map.on('click', lyr, async (e) => {
             const props = e.features[0].properties;
             const isAlive = props.is_alive == 1 ? 'Oui' : 'Non';
+            const gender = props.gender || 'Inconnu';
             
-            new maplibregl.Popup({ closeButton: true })
-                .setLngLat(e.lngLat)
-                .setHTML(`
-                    <div style="padding: 5px;">
-                        <h3 style="font-weight: 700; margin-bottom: 5px; font-size: 1.2rem;">
-                            <a href="https://www.wikidata.org/wiki/${props.wikidata_code}" target="_blank" style="color:white; text-decoration: none;">
-                                ${props.name}
-                            </a>
-                        </h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 2px;">Rang (notoriété): <b>${props.rank}</b></p>
-                        <p style="color: var(--accent); font-size: 0.9em;">En vie: ${isAlive}</p>
+            wikiPanel.classList.add('open');
+            wikiPanelContent.innerHTML = `<p style="color:white; text-align:center; margin-top:50px; font-family:'Outfit';">Chargement de Wikipédia...</p>`;
+
+            try {
+                const wdRes = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${props.wikidata_code}&props=sitelinks&format=json&origin=*`);
+                const wdData = await wdRes.json();
+                
+                let wikiTitle = props.name;
+                let lang = 'en';
+
+                const entity = wdData.entities[props.wikidata_code];
+                if (entity && entity.sitelinks) {
+                    if (entity.sitelinks.frwiki) {
+                        wikiTitle = entity.sitelinks.frwiki.title;
+                        lang = 'fr';
+                    } else if (entity.sitelinks.enwiki) {
+                        wikiTitle = entity.sitelinks.enwiki.title;
+                        lang = 'en';
+                    }
+                }
+
+                const wpRes = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiTitle)}`);
+                const wpData = await wpRes.json();
+
+                const imageUrl = wpData.thumbnail ? wpData.thumbnail.source : '';
+                const extract = wpData.extract || 'Aucune description disponible.';
+                const wpLink = wpData.content_urls ? wpData.content_urls.desktop.page : `https://www.wikidata.org/wiki/${props.wikidata_code}`;
+
+                let html = '';
+                if (imageUrl) {
+                    html += `<div class="wiki-image-container"><img src="${imageUrl}" alt="${props.name}"></div>`;
+                }
+                html += `
+                    <h2 class="wiki-title">${props.name}</h2>
+                    <div class="wiki-subtitle">Wikidata: ${props.wikidata_code}</div>
+                    <div class="wiki-extract">${extract}</div>
+                    
+                    <div class="wiki-stats">
+                        <p><span>Catégorie</span> <b>${lyr === 'All' ? 'Inconnue' : lyr}</b></p>
+                        <p><span>Rang Notoriété</span> <b>#${props.rank}</b></p>
+                        <p><span>En vie</span> <b>${isAlive}</b></p>
                     </div>
-                `)
-                .addTo(map);
+                    
+                    <a href="${wpLink}" target="_blank" class="wiki-link-btn">Lire l'article Wikipédia</a>
+                `;
+                
+                wikiPanelContent.innerHTML = html;
+
+            } catch (err) {
+                console.error(err);
+                wikiPanelContent.innerHTML = `
+                    <h2 class="wiki-title">${props.name}</h2>
+                    <p style="color: var(--text-secondary); margin-top:20px;">Impossible de charger les données Wikipédia.</p>
+                `;
+            }
         });
 
         map.on('mouseenter', lyr, () => {

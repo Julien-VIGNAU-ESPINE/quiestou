@@ -108,3 +108,122 @@ body {
 .maplibregl-popup-close-button {
     color: white;
 }
+
+/* Wiki Side Panel */
+.wiki-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 380px;
+    height: 100vh;
+    background: var(--box-bg);
+    backdrop-filter: blur(15px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.6);
+    z-index: 20;
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    overflow-y: auto;
+    font-family: 'Outfit', sans-serif;
+}
+
+.wiki-panel.open {
+    transform: translateX(0);
+}
+
+.close-panel-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 25;
+}
+
+.close-panel-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.wiki-panel-content {
+    padding: 30px 25px;
+}
+
+.wiki-image-container {
+    width: 100%;
+    height: 250px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    background: rgba(0,0,0,0.3);
+}
+
+.wiki-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.wiki-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.wiki-subtitle {
+    color: var(--accent);
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.wiki-extract {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.wiki-stats {
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.wiki-stats p {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.wiki-stats p:last-child {
+    margin-bottom: 0;
+}
+
+.wiki-link-btn {
+    display: block;
+    text-align: center;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.wiki-link-btn:hover {
+    background: var(--accent-hover);
+}
